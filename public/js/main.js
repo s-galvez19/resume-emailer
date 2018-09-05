@@ -3,7 +3,7 @@ const btn = document.getElementById('btn');
 btn.onclick = function (e) {
   e.preventDefault();
   
-  fetch('/', {
+  fetch('http://localhost:6516', {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
