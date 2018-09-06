@@ -1,6 +1,6 @@
-const btn = document.getElementById('btn');
+const button = document.getElementById('send');
 
-btn.onclick = function (e) {
+button.onclick = function (e) {
   e.preventDefault();
   
   fetch('http://localhost:6516', {
@@ -11,9 +11,9 @@ btn.onclick = function (e) {
     },
     credentials: "include",
     body: JSON.stringify({
-      from: document.getElementById('from'),
-      destination: document.getElementById('dest_email'),
-      subject: document.getElementById('subject')
+      from: document.getElementById('from').value,
+      destination: document.getElementById('email').value,
+      subject: document.getElementById('subject').value
     })
   })
   .then(result => result.json())

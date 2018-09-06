@@ -1,130 +1,89 @@
 var port = process.env.PORT || 6516;
 
-var express = require('express');
-var fs = require('fs');
-var path = require('path');
-var nodemailer = require('nodemailer');
-var app = express();
+var express = require("express"); //lets you communicate with the back end
+var fs = require("fs");
+var path = require("path"); // creates the path, the path that connects to your form
+var nodemailer = require("nodemailer");
+var app = express(); //express is a funtcion so you have to call it
+
 var transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
-    user: 'fviclass@gmail.com',
-    pass: 'fviclass2017'
+    user: "fviclass@gmail.com",
+    pass: "fviclass2017"
   }
 });
-// Parse the request body
+// this is where the email will be sent from
+
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-var port = process.env.PORT || 6516; //objects -- PORT is the name of the environmental variable that is creted when you run a script
+app.use(express.json()); // this does a body parse
 
-var express = require('express');
-var fs = require('fs');
-var nodemailer = require('nodemailer');
-var app = express();
-var path = require('path');
+//purpose of this is to enable cross domain requests
+// Add headers
+app.use(function (req, res, next) {
+  // var allowedOrigins = ['http://ktarver.techlaunch.io:8000', 'http://142.93.198.70:8000'];
+  // var origin = req.headers.origin;
+  // if (allowedOrigins.indexOf(origin) > -1) {
+  //   res.setHeader('Access-Control-Allow-Origin', origin);
+  // }
 
-var transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-       user: 'fviclass@gmail.com',
-       pass: 'fviclass2017', 
-    }
+  // Website you wish to allow to connect
+  res.setHeader('Access-Control-Allow-Origin', "*");
+
+  // Request methods you wish to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+  // Request headers you wish to allow
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, content-type');
+
+  // Set to true if you need the website to include cookies in the requests sent
+  // to the API (e.g. in case you use sessions)
+  res.setHeader('Access-Control-Allow-Credentials', true);
+
+  // Pass to next layer of middleware
+  next();
 });
 
-//parse the request body
-app.use(express.urlencoded({extended: true}));
-app.use(express.json());
+app.use("/", express.static(path.join(__dirname, "public"))); // this lets you expose your assets folder
 
-//enable cross domain requests
-//add headers
-app.use(function(req, res, next){
-    //website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:6516');
-    //request methods you wish to allow
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    // request headers you wish to allow
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, content-type');
-    //Set to true if you need the website to include cookie in th requests sent
-    // to the API (ex. in case you use sessions)
-    res.setHeader('Access-Control-Allow-Credentials', true);
+app.get("/", function(req, res) {
+  res.sendFile(path.join(__dirname, "form.html"));
+}); // listensnt to any get request
 
-    //Pass to the next layer of middleware
-    next();
-});
+//purpose of this is to enable cross domain requests
+// Add headers
 
 
-app.use("/", express.static(path.join(__dirname, 'assets')));
-//access the info you want to expose to the public on the webpage
+app.post("/", function(req, res) {
+  //listens to any post request
+  console.log(req.body);
 
-app.get('/', function(req, res){ //req - contains all the info from the frontend, res-responds to the server
-    res.sendFile(path.join(__dirname, './form.html'));
-});
+  var emailBody = fs.readFileSync('./public/resume.html');
 
-app.post('/',
-function(req, res, next){
-    if(req.body.from){
-        next();
-    }
-    else{
-        res.send({
-            success: false,
-            message: 'Missing From'
-        });
-    }
-},
-function(req, res, next){
-    if(req.body.email){
-        next();
-    }
-    else {
-        res.send({
-            success: false,
-            message: 'Missing Email'
-        })
-    }
-},
-function (req, res, next){
-    if(req.body.subject){
-        next();
-    }
-    else {
-        res.send({
-            success: false,
-            message: 'Missing Subject'
-        })
-    }
-},
-function(req, res){
-    console.log(req.body);
+  var mailOptions = {
+    from: req.body.from,
+    to: req.body.destination,
+    html: emailBody,
+    subject: req.body.subject
+  };
 
-    var emailBody = fs.readFileSync('./assets/resume.html');
+  transporter.sendMail(mailOptions, function(err, info) {
+    if (err)
+      res.send({
+        success: false,
+        message: err.message
+      });
 
-    var mailOptions = {
-        from: req.body.from,
-        to: req.body.email,
-        html: emailBody,
-        subject: req.body.subject,
-    };
-
-    transporter.sendMail(mailOptions, function(err, info){
-        if(err){
-            console.log('error', err);
-            
-            return res.send({
-                success: false,
-                message: err.message
-            });
-        }
-        res.send({
-            success: true,
-            message: "Your resume has been successfully sent"
-        });
+    res.send({
+      success: true,
+      message: "Your resume has been successfully send"
     });
+  });
 });
 
-app.listen(port, function(err){
-    if(err){
-        return console.log(err)
-    }
-    console.log('server listening on port ', port);
-})
+app.listen(port, function(err) {
+  if (err) {
+    return console.log(err);
+  }
+  console.log("server listening on port", port);
+});
