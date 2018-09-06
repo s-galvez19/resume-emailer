@@ -3,7 +3,7 @@ const button = document.getElementById('send');
 button.onclick = function (e) {
   e.preventDefault();
   
-  fetch('http://localhost:6516', {
+  fetch('http://sgalvez.techlaunch.io:6516', {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
